@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Marvel Universe | Heroes Gallery</title>
+  
+  <!-- More reliable Tailwind CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+  <style>
+    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    .hero-bg { 
+      background: linear-gradient(rgba(0,0,0,0.75), rgba(0,0,0,0.85)), 
+                  url('https://picsum.photos/id/1015/2000/1200') center/cover no-repeat; 
+    }
+    .card { transition: all 0.3s ease; }
+    .card:hover { transform: translateY(-8px) scale(1.03); box-shadow: 0 25px 30px -10px rgb(185 28 28); }
+  </style>
+</head>
+<body class="bg-zinc-950 text-white">
+
+  <!-- Navbar -->
+  <nav class="bg-black border-b border-red-600 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <span class="text-4xl font-bold tracking-tighter text-red-600">MARVEL</span>
+      </div>
+      <div class="flex gap-8 text-lg">
+        <a href="#" class="hover:text-red-500 transition-colors">Home</a>
+        <a href="#characters" class="hover:text-red-500 transition-colors">Characters</a>
+      </div>
+      <a href="https://github.com/YOUR-USERNAME/marvel-characters-website" target="_blank" 
+         class="flex items-center gap-2 bg-red-600 hover:bg-red-700 px-5 py-2 rounded-full font-medium transition-colors">
+        <i class="fab fa-github"></i> View on GitHub
+      </a>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <header class="hero-bg h-screen flex items-center justify-center text-center">
+    <div class="max-w-4xl px-6">
+      <h1 class="text-6xl md:text-7xl font-bold tracking-tighter mb-4">MARVEL UNIVERSE</h1>
+      <p class="text-2xl md:text-3xl text-red-400 mb-8">Explore the Greatest Heroes</p>
+      <a href="#characters" 
+         class="inline-block bg-red-600 hover:bg-red-700 px-10 py-4 rounded-full text-xl font-semibold transition-colors">
+        MEET THE HEROES
+      </a>
+    </div>
+  </header>
+
+  <!-- Characters Section -->
+  <section id="characters" class="max-w-7xl mx-auto px-6 py-16">
+    <div class="flex flex-col md:flex-row justify-between items-center mb-12 gap-4">
+      <h2 class="text-5xl font-bold">Marvel Characters</h2>
+      <input 
+        id="searchInput"
+        type="text" 
+        placeholder="Search heroes (e.g. Iron Man, Thor)..." 
+        onkeyup="filterCharacters()"
+        class="bg-zinc-900 border border-red-600 focus:border-red-500 rounded-full px-6 py-4 w-full max-w-md text-lg outline-none">
+    </div>
+
+    <div id="charactersGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+      <!-- Populated by JavaScript -->
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-black py-12 border-t border-red-600 text-center">
+    <p class="text-red-500 mb-2">Single Page Marvel Website • Front-End Only • GitHub Pages</p>
+    <p class="text-sm text-zinc-500">Submitted by B.YASHAS | Kristu Jayanti University SEC Course</p>
+  </footer>
+
+  <!-- Modal -->
+  <div id="modal" class="hidden fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4">
+    <div onclick="event.stopImmediatePropagation()" 
+         class="bg-zinc-900 rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-auto">
+      <div id="modalContent" class="p-8"></div>
+    </div>
+  </div>
+
+  <script>
+    const characters = [
+      { name: "Iron Man", alias: "Tony Stark", image: "https://picsum.photos/id/1015/600/400", desc: "Genius billionaire playboy philanthropist.", powers: "Powered armor suit, super intelligence, flight", actor: "Robert Downey Jr." },
+      { name: "Captain America", alias: "Steve Rogers", image: "https://picsum.photos/id/29/600/400", desc: "The First Avenger and symbol of hope.", powers: "Super soldier serum, vibranium shield", actor: "Chris Evans" },
+      { name: "Thor", alias: "God of Thunder", image: "https://picsum.photos/id/1016/600/400", desc: "Asgardian prince and protector of the Nine Realms.", powers: "Mjolnir, lightning, super strength", actor: "Chris Hemsworth" },
+      { name: "Spider-Man", alias: "Peter Parker", image: "https://picsum.photos/id/201/600/400", desc: "Your friendly neighborhood Spider-Man.", powers: "Wall-crawling, spider-sense, web-shooters", actor: "Tom Holland" },
+      { name: "Hulk", alias: "Bruce Banner", image: "https://picsum.photos/id/1005/600/400", desc: "Don't make him angry.", powers: "Gamma radiation, immense strength", actor: "Mark Ruffalo" },
+      { name: "Black Widow", alias: "Natasha Romanoff", image: "https://picsum.photos/id/160/600/400", desc: "Master spy and Avenger.", powers: "Expert martial artist, espionage", actor: "Scarlett Johansson" },
+      { name: "Black Panther", alias: "T'Challa", image: "https://picsum.photos/id/1018/600/400", desc: "King of Wakanda.", powers: "Vibranium suit, enhanced senses", actor: "Chadwick Boseman" },
+      { name: "Doctor Strange", alias: "Stephen Strange", image: "https://picsum.photos/id/1009/600/400", desc: "Sorcerer Supreme.", powers: "Mystic arts, time manipulation", actor: "Benedict Cumberbatch" }
+    ];
+
+    function renderCharacters(filtered) {
+      const grid = document.getElementById('charactersGrid');
+      grid.innerHTML = '';
+      filtered.forEach(char => {
+        const cardHTML = `
+          <div class="card bg-zinc-900 rounded-3xl overflow-hidden cursor-pointer border border-zinc-800" onclick="showModal('${char.name}')">
+            <img src="${char.image}" alt="${char.name}" class="w-full h-64 object-cover">
+            <div class="p-6">
+              <h3 class="text-2xl font-bold text-red-500">${char.name}</h3>
+              <p class="text-zinc-400">${char.alias}</p>
+              <p class="text-sm mt-3 text-zinc-300 line-clamp-3">${char.desc}</p>
+              <button class="mt-6 w-full bg-red-600 hover:bg-red-700 py-3 rounded-2xl font-medium transition-colors">
+                Learn More
+              </button>
+            </div>
+          </div>
+        `;
+        grid.innerHTML += cardHTML;
+      });
+    }
+
+    function filterCharacters() {
+      const term = document.getElementById('searchInput').value.toLowerCase().trim();
+      const filtered = characters.filter(c => 
+        c.name.toLowerCase().includes(term) || 
+        c.alias.toLowerCase().includes(term)
+      );
+      renderCharacters(filtered.length ? filtered : characters);
+    }
+
+    function showModal(name) {
+      const char = characters.find(c => c.name === name);
+      if (!char) return;
+
+      const content = document.getElementById('modalContent');
+      content.innerHTML = `
+        <img src="${char.image}" class="w-full h-80 object-cover rounded-3xl mb-6">
+        <h2 class="text-4xl font-bold text-red-600">${char.name}</h2>
+        <p class="text-2xl text-zinc-400">${char.alias}</p>
+        <p class="my-6 text-zinc-300">${char.desc}</p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 text-sm">
+          <div><strong class="block text-red-500 mb-1">Powers</strong>${char.powers}</div>
+          <div><strong class="block text-red-500 mb-1">Portrayed by</strong>${char.actor}</div>
+        </div>
+        <button onclick="closeModal()" 
+                class="mt-10 w-full bg-zinc-800 hover:bg-zinc-700 py-4 rounded-2xl text-lg font-medium transition-colors">
+          Close
+        </button>
+      `;
+      document.getElementById('modal').classList.remove('hidden');
+      document.getElementById('modal').classList.add('flex');
+    }
+
+    function closeModal() {
+      const modal = document.getElementById('modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    // Initial render
+    window.onload = () => {
+      renderCharacters(characters);
+    };
+  </script>
+</body>
+</html>
