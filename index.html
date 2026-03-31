@@ -7,161 +7,117 @@
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
   <style>
-    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-    .hero-bg { 
-      background: linear-gradient(rgba(0,0,0,0.75), rgba(0,0,0,0.85)), 
-                  url('https://picsum.photos/id/1015/2000/1200') center/cover no-repeat; 
-    }
+    body { font-family: system-ui, sans-serif; }
+    .hero-bg { background: linear-gradient(rgba(0,0,0,0.75), rgba(0,0,0,0.85)), url('https://picsum.photos/id/1015/2000/1200') center/cover; }
     .card { transition: all 0.3s ease; }
-    .card:hover { transform: translateY(-8px) scale(1.03); box-shadow: 0 25px 30px -10px rgb(185 28 28); }
+    .card:hover { transform: translateY(-8px) scale(1.03); }
   </style>
 </head>
 <body class="bg-zinc-950 text-white">
 
-  <!-- Navbar -->
+  <!-- Navbar + Hero (same as before) -->
   <nav class="bg-black border-b border-red-600 sticky top-0 z-50">
     <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <span class="text-4xl font-bold tracking-tighter text-red-600">MARVEL</span>
+      <span class="text-4xl font-bold text-red-600">MARVEL</span>
+      <div class="flex gap-8">
+        <a href="#" class="hover:text-red-500">Home</a>
+        <a href="#characters" class="hover:text-red-500">Characters</a>
       </div>
-      <div class="flex gap-8 text-lg">
-        <a href="#" class="hover:text-red-500 transition-colors">Home</a>
-        <a href="#characters" class="hover:text-red-500 transition-colors">Characters</a>
-      </div>
-      <a href="https://github.com/YOUR-USERNAME/marvel-characters-website" target="_blank" 
-         class="flex items-center gap-2 bg-red-600 hover:bg-red-700 px-5 py-2 rounded-full font-medium transition-colors">
-        <i class="fab fa-github"></i> View on GitHub
-      </a>
+      <a href="https://github.com/YOUR-USERNAME/marvel-characters-website" target="_blank" class="bg-red-600 px-5 py-2 rounded-full font-medium">GitHub</a>
     </div>
   </nav>
 
-  <!-- Hero -->
   <header class="hero-bg h-screen flex items-center justify-center text-center">
-    <div class="max-w-4xl px-6">
-      <h1 class="text-6xl md:text-7xl font-bold tracking-tighter mb-4">MARVEL UNIVERSE</h1>
-      <p class="text-2xl md:text-3xl text-red-400 mb-8">Explore the Greatest Heroes</p>
-      <a href="#characters" class="inline-block bg-red-600 hover:bg-red-700 px-10 py-4 rounded-full text-xl font-semibold transition-colors">
-        MEET THE HEROES
-      </a>
+    <div>
+      <h1 class="text-7xl font-bold">MARVEL UNIVERSE</h1>
+      <p class="text-3xl text-red-400 mt-4">Share your thoughts on your favorite heroes</p>
     </div>
   </header>
 
-  <!-- Characters Section -->
   <section id="characters" class="max-w-7xl mx-auto px-6 py-16">
-    <div class="flex flex-col md:flex-row justify-between items-center mb-12 gap-4">
-      <h2 class="text-5xl font-bold">Marvel Characters</h2>
-      <input 
-        id="searchInput"
-        type="text" 
-        placeholder="Search heroes..." 
-        onkeyup="filterCharacters()"
-        class="bg-zinc-900 border border-red-600 focus:border-red-500 rounded-full px-6 py-4 w-full max-w-md text-lg outline-none">
-    </div>
-
-    <div id="charactersGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-      <!-- Populated by JavaScript from Backend -->
+    <h2 class="text-5xl font-bold mb-12">Marvel Characters</h2>
+    <div id="charactersGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <!-- Cards loaded by JS -->
     </div>
   </section>
 
-  <!-- Footer -->
-  <footer class="bg-black py-12 border-t border-red-600 text-center">
-    <p class="text-red-500 mb-2">Single Page Website with Node.js Backend + Firebase</p>
-    <p class="text-sm text-zinc-500">B.YASHAS • Kristu Jayanti University BCACYBER A • March 2026</p>
-  </footer>
-
-  <!-- Modal -->
-  <div id="modal" class="hidden fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4">
-    <div onclick="event.stopImmediatePropagation()" class="bg-zinc-900 rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-auto">
-      <div id="modalContent" class="p-8"></div>
-    </div>
-  </div>
-
   <script>
+    const BACKEND_URL = "https://marvel-backend-kz52.onrender.com";   // ← Change if your URL is different
+
     let characters = [];
 
-    // Replace with your actual Render URL
-    const BACKEND_URL = "https://marvel-backend-kz52.onrender.com";
-
     async function loadCharacters() {
-      const grid = document.getElementById('charactersGrid');
-      grid.innerHTML = '<p class="col-span-full text-center py-12 text-red-400">Loading heroes from backend...</p>';
-
       try {
-        const response = await fetch(`${BACKEND_URL}/api/characters`);
-        if (!response.ok) throw new Error('Failed to fetch');
-        
-        characters = await response.json();
+        const res = await fetch(`${BACKEND_URL}/api/characters`);
+        characters = await res.json();
         renderCharacters(characters);
-      } catch (error) {
-        console.error(error);
-        grid.innerHTML = `
-          <p class="col-span-full text-center py-12 text-red-500">
-            Could not connect to backend. Make sure the backend URL is correct and service is Live.
-          </p>`;
+      } catch (e) {
+        document.getElementById('charactersGrid').innerHTML = `<p class="text-red-500">Error loading characters</p>`;
       }
     }
 
-    function renderCharacters(filtered) {
+    function renderCharacters(list) {
       const grid = document.getElementById('charactersGrid');
       grid.innerHTML = '';
-      
-      filtered.forEach(char => {
-        const cardHTML = `
-          <div class="card bg-zinc-900 rounded-3xl overflow-hidden cursor-pointer border border-zinc-800" onclick="showModal('${char.name}')">
-            <img src="${char.image}" alt="${char.name}" class="w-full h-64 object-cover">
-            <div class="p-6">
-              <h3 class="text-2xl font-bold text-red-500">${char.name}</h3>
-              <p class="text-zinc-400">${char.alias}</p>
-              <p class="text-sm mt-3 text-zinc-300 line-clamp-3">${char.desc}</p>
-              <button class="mt-6 w-full bg-red-600 hover:bg-red-700 py-3 rounded-2xl font-medium transition-colors">
-                Learn More
+      list.forEach(char => {
+        const card = document.createElement('div');
+        card.className = "bg-zinc-900 rounded-3xl overflow-hidden border border-zinc-700";
+        card.innerHTML = `
+          <img src="${char.image || 'https://picsum.photos/id/1015/600/400'}" class="w-full h-64 object-cover">
+          <div class="p-6">
+            <h3 class="text-2xl font-bold text-red-500">${char.name}</h3>
+            <p class="text-zinc-400">${char.alias || ''}</p>
+            <p class="text-sm mt-2 text-zinc-300">${char.desc || ''}</p>
+
+            <!-- Comment Form -->
+            <div class="mt-6 pt-4 border-t border-zinc-700">
+              <input id="name-${char.name}" type="text" placeholder="Your name (optional)" 
+                     class="w-full bg-zinc-800 p-3 rounded-xl text-sm mb-3">
+              <textarea id="comment-${char.name}" placeholder="Write your comment about ${char.name}..." 
+                        class="w-full bg-zinc-800 p-3 rounded-xl h-24 text-sm"></textarea>
+              <button onclick="submitComment('${char.name}')" 
+                      class="mt-3 w-full bg-red-600 hover:bg-red-700 py-3 rounded-2xl font-medium">
+                Post Comment
               </button>
             </div>
           </div>
         `;
-        grid.innerHTML += cardHTML;
+        grid.appendChild(card);
       });
     }
 
-    function filterCharacters() {
-      const term = document.getElementById('searchInput').value.toLowerCase().trim();
-      const filtered = characters.filter(c => 
-        (c.name && c.name.toLowerCase().includes(term)) || 
-        (c.alias && c.alias.toLowerCase().includes(term))
-      );
-      renderCharacters(filtered.length ? filtered : characters);
+    async function submitComment(characterName) {
+      const userName = document.getElementById(`name-${characterName}`).value.trim() || "Anonymous";
+      const commentText = document.getElementById(`comment-${characterName}`).value.trim();
+
+      if (!commentText) {
+        alert("Please write a comment!");
+        return;
+      }
+
+      try {
+        const response = await fetch(`${BACKEND_URL}/api/comments`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ characterName, userName, commentText })
+        });
+
+        const result = await response.json();
+        if (result.success) {
+          alert("✅ Comment posted successfully!");
+          document.getElementById(`comment-${characterName}`).value = '';  // clear textarea
+        } else {
+          alert("Failed to post comment");
+        }
+      } catch (error) {
+        alert("Error connecting to server");
+        console.error(error);
+      }
     }
 
-    function showModal(name) {
-      const char = characters.find(c => c.name === name);
-      if (!char) return;
-
-      const content = document.getElementById('modalContent');
-      content.innerHTML = `
-        <img src="${char.image}" class="w-full h-80 object-cover rounded-3xl mb-6">
-        <h2 class="text-4xl font-bold text-red-600">${char.name}</h2>
-        <p class="text-2xl text-zinc-400">${char.alias}</p>
-        <p class="my-6 text-zinc-300">${char.desc}</p>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 text-sm">
-          <div><strong class="block text-red-500 mb-1">Powers</strong>${char.powers || 'N/A'}</div>
-          <div><strong class="block text-red-500 mb-1">Portrayed by</strong>${char.actor || 'N/A'}</div>
-        </div>
-        <button onclick="closeModal()" class="mt-10 w-full bg-zinc-800 hover:bg-zinc-700 py-4 rounded-2xl text-lg font-medium transition-colors">
-          Close
-        </button>
-      `;
-      document.getElementById('modal').classList.remove('hidden');
-      document.getElementById('modal').classList.add('flex');
-    }
-
-    function closeModal() {
-      const modal = document.getElementById('modal');
-      modal.classList.add('hidden');
-      modal.classList.remove('flex');
-    }
-
-    // Load data when page opens
     window.onload = loadCharacters;
   </script>
 </body>
 </html>
+    
+ 
