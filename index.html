@@ -8,90 +8,147 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
   <style>
     body { font-family: system-ui, sans-serif; }
-    .hero-bg { background: linear-gradient(rgba(0,0,0,0.75), rgba(0,0,0,0.85)), url('https://picsum.photos/id/1015/2000/1200') center/cover; }
+    .hero-bg { 
+      background: linear-gradient(rgba(0,0,0,0.75), rgba(0,0,0,0.85)), 
+                  url('https://picsum.photos/id/1015/2000/1200') center/cover no-repeat; 
+    }
     .card { transition: all 0.3s ease; }
     .card:hover { transform: translateY(-8px) scale(1.03); }
   </style>
 </head>
 <body class="bg-zinc-950 text-white">
 
-  <!-- Navbar + Hero (same as before) -->
+  <!-- Navbar -->
   <nav class="bg-black border-b border-red-600 sticky top-0 z-50">
     <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-      <span class="text-4xl font-bold text-red-600">MARVEL</span>
-      <div class="flex gap-8">
+      <span class="text-4xl font-bold tracking-tighter text-red-600">MARVEL</span>
+      <div class="flex gap-8 text-lg">
         <a href="#" class="hover:text-red-500">Home</a>
         <a href="#characters" class="hover:text-red-500">Characters</a>
       </div>
-      <a href="https://github.com/YOUR-USERNAME/marvel-characters-website" target="_blank" class="bg-red-600 px-5 py-2 rounded-full font-medium">GitHub</a>
+      <a href="https://github.com/YOUR-USERNAME/marvel-characters-website" target="_blank" 
+         class="flex items-center gap-2 bg-red-600 hover:bg-red-700 px-5 py-2 rounded-full font-medium">
+        <i class="fab fa-github"></i> GitHub
+      </a>
     </div>
   </nav>
 
+  <!-- Hero -->
   <header class="hero-bg h-screen flex items-center justify-center text-center">
-    <div>
-      <h1 class="text-7xl font-bold">MARVEL UNIVERSE</h1>
-      <p class="text-3xl text-red-400 mt-4">Share your thoughts on your favorite heroes</p>
+    <div class="max-w-4xl px-6">
+      <h1 class="text-6xl md:text-7xl font-bold tracking-tighter mb-4">MARVEL UNIVERSE</h1>
+      <p class="text-2xl md:text-3xl text-red-400">Explore Heroes • Share Your Thoughts</p>
     </div>
   </header>
 
+  <!-- Characters Section -->
   <section id="characters" class="max-w-7xl mx-auto px-6 py-16">
-    <h2 class="text-5xl font-bold mb-12">Marvel Characters</h2>
+    <h2 class="text-5xl font-bold mb-12 text-center">Marvel Characters</h2>
     <div id="charactersGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-      <!-- Cards loaded by JS -->
+      <!-- Cards populated by JavaScript -->
     </div>
   </section>
 
   <script>
-    const BACKEND_URL = "https://marvel-backend-kz52.onrender.com";   // ← Change if your URL is different
+    const BACKEND_URL = "https://marvel-backend-kz52.onrender.com";   // ← Change only if your Render URL is different
 
     let characters = [];
 
     async function loadCharacters() {
+      const grid = document.getElementById('charactersGrid');
+      grid.innerHTML = `<p class="col-span-full text-center py-12 text-red-400">Loading heroes from backend...</p>`;
+
       try {
         const res = await fetch(`${BACKEND_URL}/api/characters`);
         characters = await res.json();
         renderCharacters(characters);
       } catch (e) {
-        document.getElementById('charactersGrid').innerHTML = `<p class="text-red-500">Error loading characters</p>`;
+        grid.innerHTML = `<p class="col-span-full text-center py-12 text-red-500">Could not connect to backend. Please check if Render service is Live.</p>`;
+      }
+    }
+
+    async function loadComments(characterName, container) {
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/comments?characterName=${encodeURIComponent(characterName)}`);
+        const comments = await res.json();
+
+        let html = `<div class="mt-6 pt-4 border-t border-zinc-700">`;
+        html += `<h4 class="text-red-400 font-medium mb-3">Comments (${comments.length})</h4>`;
+
+        if (comments.length === 0) {
+          html += `<p class="text-zinc-500 text-sm italic">No comments yet. Be the first to comment!</p>`;
+        } else {
+          comments.forEach(c => {
+            const date = new Date(c.timestamp).toLocaleString('en-IN', { 
+              month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' 
+            });
+            html += `
+              <div class="bg-zinc-800 rounded-2xl p-4 mb-3">
+                <div class="flex justify-between text-xs text-zinc-400 mb-1">
+                  <span class="font-medium text-white">${c.userName}</span>
+                  <span>${date}</span>
+                </div>
+                <p class="text-zinc-300">${c.commentText}</p>
+              </div>`;
+          });
+        }
+        html += `</div>`;
+        container.innerHTML = html;
+      } catch (e) {
+        container.innerHTML = `<p class="text-red-500 text-sm">Failed to load comments</p>`;
       }
     }
 
     function renderCharacters(list) {
       const grid = document.getElementById('charactersGrid');
       grid.innerHTML = '';
+
       list.forEach(char => {
         const card = document.createElement('div');
-        card.className = "bg-zinc-900 rounded-3xl overflow-hidden border border-zinc-700";
+        card.className = "card bg-zinc-900 rounded-3xl overflow-hidden border border-zinc-700";
+
         card.innerHTML = `
-          <img src="${char.image || 'https://picsum.photos/id/1015/600/400'}" class="w-full h-64 object-cover">
+          <img src="${char.image || 'https://picsum.photos/id/1015/600/400'}" 
+               class="w-full h-64 object-cover" onerror="this.src='https://picsum.photos/id/1015/600/400'">
+          
           <div class="p-6">
             <h3 class="text-2xl font-bold text-red-500">${char.name}</h3>
             <p class="text-zinc-400">${char.alias || ''}</p>
-            <p class="text-sm mt-2 text-zinc-300">${char.desc || ''}</p>
+            <p class="text-sm mt-3 text-zinc-300 line-clamp-3">${char.desc || ''}</p>
 
             <!-- Comment Form -->
             <div class="mt-6 pt-4 border-t border-zinc-700">
               <input id="name-${char.name}" type="text" placeholder="Your name (optional)" 
-                     class="w-full bg-zinc-800 p-3 rounded-xl text-sm mb-3">
-              <textarea id="comment-${char.name}" placeholder="Write your comment about ${char.name}..." 
-                        class="w-full bg-zinc-800 p-3 rounded-xl h-24 text-sm"></textarea>
+                     class="w-full bg-zinc-800 p-3 rounded-xl text-sm mb-3 outline-none">
+              <textarea id="comment-${char.name}" placeholder="Write your thoughts about ${char.name}..." 
+                        class="w-full bg-zinc-800 p-3 rounded-xl h-24 text-sm outline-none resize-y"></textarea>
               <button onclick="submitComment('${char.name}')" 
-                      class="mt-3 w-full bg-red-600 hover:bg-red-700 py-3 rounded-2xl font-medium">
+                      class="mt-3 w-full bg-red-600 hover:bg-red-700 py-3 rounded-2xl font-medium transition-colors">
                 Post Comment
               </button>
             </div>
+
+            <!-- Comments Display Area -->
+            <div id="comments-area-${char.name}" class="mt-4"></div>
           </div>
         `;
+
         grid.appendChild(card);
+
+        // Load existing comments for this character
+        loadComments(char.name, document.getElementById(`comments-area-${char.name}`));
       });
     }
 
     async function submitComment(characterName) {
-      const userName = document.getElementById(`name-${characterName}`).value.trim() || "Anonymous";
-      const commentText = document.getElementById(`comment-${characterName}`).value.trim();
+      const userNameInput = document.getElementById(`name-${characterName}`);
+      const commentInput = document.getElementById(`comment-${characterName}`);
+
+      const userName = userNameInput.value.trim() || "Anonymous";
+      const commentText = commentInput.value.trim();
 
       if (!commentText) {
-        alert("Please write a comment!");
+        alert("Please write a comment before posting!");
         return;
       }
 
@@ -103,21 +160,25 @@
         });
 
         const result = await response.json();
+
         if (result.success) {
           alert("✅ Comment posted successfully!");
-          document.getElementById(`comment-${characterName}`).value = '';  // clear textarea
+          commentInput.value = '';   // Clear textarea
+
+          // Refresh comments for this character
+          const commentsArea = document.getElementById(`comments-area-${characterName}`);
+          loadComments(characterName, commentsArea);
         } else {
-          alert("Failed to post comment");
+          alert("Failed to post comment: " + (result.error || 'Unknown error'));
         }
       } catch (error) {
-        alert("Error connecting to server");
         console.error(error);
+        alert("Error connecting to server. Please try again.");
       }
     }
 
+    // Initial load
     window.onload = loadCharacters;
   </script>
 </body>
 </html>
-    
- 
